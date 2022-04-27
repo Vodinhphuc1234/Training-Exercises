@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wep-app>
+    <display-name>Exercise 2+3</display-name>
+    <session-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+</wep-app>
