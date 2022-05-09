@@ -28,13 +28,15 @@
                     <li class="nav-item"><a class="nav-link" href="#!">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="#!">Contact</a></li>
                     <li class="nav-item"><a class="nav-link" href="#!">Services</a></li>
-                    <c:if test="${user==null}">
+                        <c:if test="${user==null}">
                         <li class="nav-item"><a class="nav-link" href="login">Login</a></li>
-                    </c:if>
-                    <c:if test="${user != null}">
-                        <li class="nav-item"><a class="nav-link" >Welcome, ${user.getUsername()}</a></li>
+                        </c:if>
+                        <c:if test="${user != null}">
+                        <li class="nav-item" id="profileLink">
+                            <a class="nav-link" >Welcome, ${user.getUsername()}</a>
+                        </li>
                         <li class="nav-item"><a class="nav-link" href="logout">Logout</a></li>
-                    </c:if>
+                        </c:if>
                 </ul>
             </div>
         </div>
@@ -93,5 +95,29 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Core theme JS-->
     <script src="<c:url value='/template/js/scripts.js'/>"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+
+    <script>
+        $('#profileLink').click( function(e) {
+            e.preventDefault();
+
+            console.log("hello");
+            $.ajax({
+                url: 'api/profile',
+                method: "GET",
+                contentType: 'application/json',
+                success: function (r) {
+                    console.log(r);
+                    sessionStorage.setItem("profile", JSON.stringify(r) );
+                    window.location.href = "/profile?action=view";
+                },
+                error: function(){
+                    console.log("false");
+                }
+            });
+        });
+    </script>
 </body>
 </html>

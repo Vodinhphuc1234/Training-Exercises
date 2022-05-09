@@ -67,7 +67,7 @@
                     console.log(JSON.stringify(data))
                 
                 $.ajax({
-                    url: 'profile',
+                    url: 'api/profile',
                     method: "POST",
                     contentType: 'application/json',
                     data: JSON.stringify(data),

@@ -29,47 +29,18 @@ import org.apache.thrift.TException;
  *
  * @author vodinhphuc
  */
-@WebServlet(name = "ProfileAPI", urlPatterns = {"/profile"})
+@WebServlet(name = "ProfileAPI", urlPatterns = {"/api/profile"})
 public class ProfileAPI extends HttpServlet {
 
     HttpUtils<User> httpUtil = new HttpUtils<User>();
     UserService userService = new UserService();
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        try {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ProfileAPI</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ProfileAPI at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        } finally {
-            out.close();
-        }
-    }
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int id = Integer.valueOf(request.getParameter("id"));
+      //  int id = Integer.valueOf(request.getParameter("id"));
 
-        User user = new User(id, "Vo Dinh Phuc", "PhucVo", "dinhphuc2009", true);
+        User user = (User) SessionUtil.getInstance().getValue(request, "user");
 
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
@@ -79,6 +50,8 @@ public class ProfileAPI extends HttpServlet {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String json = objectMapper.writeValueAsString(user);
+        
+        response.setStatus(HttpServletResponse.SC_OK);
 
         out.write(json);
     }
@@ -86,8 +59,7 @@ public class ProfileAPI extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-
+       
         User user = httpUtil.getModel(request.getReader(), User.class);
         boolean success = false;
 
@@ -118,27 +90,29 @@ public class ProfileAPI extends HttpServlet {
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        StringBuilder sb = new StringBuilder();
+        try {
+            User user = httpUtil.getModel(request.getReader(), User.class);
+            
+            boolean success = userService.updateUser(user);
+            
+            if (success){
+                SessionUtil.getInstance().putValue(request, "user", user);
+                
+                String USessionID = UUID.randomUUID().toString(); //Generates random UUID
+                
+                Base64.Encoder encoder = Base64.getEncoder();
+                String encodedUSessionID = encoder.encodeToString(USessionID.getBytes());
 
-        BufferedReader in = request.getReader();
+                SessionUtil.getInstance().putUserToDB(USessionID, user);
 
-        String line;
-
-        while ((line = in.readLine()) != null) {
-            sb.append(line);
+                CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
+            } else{
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }
+        } catch (TException ex) {
+            Logger.getLogger(ProfileAPI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(ProfileAPI.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        response.setContentType("application/json");
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        User user = objectMapper.readValue(sb.toString(), User.class);
-
-        String json = objectMapper.writeValueAsString(user);
-
-        PrintWriter out = response.getWriter();
-
-        out.print(json);
     }
-
 }
