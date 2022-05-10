@@ -11,7 +11,8 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" 
               rel="stylesheet" 
-              integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" 
+              integrity=
+              "sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" 
               crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -22,7 +23,7 @@
             <form class = "border p-5 rounded bg-light">
                 <div class="mb-3">
                     <label for="oldPassword" class="form-label">Enter your old password</label>
-                    <label for="oldPassword" class="form-label ms-5" style="color: red; display: none"> Your old password was wrong.</label>
+                    <label for="oldPassword" id="alertWrongPassword" class="form-label ms-5" style="color: red; display: none"> Your old password was wrong.</label>
                     <input type="password" class="form-control" id="oldPassword" required>
                 </div>
                 <div class="mb-3">
@@ -43,7 +44,21 @@
             $('#oldPassword').change(function(e){
                 var oldPassword = $('#oldPassword').val();
                 
-                
+                $.ajax({
+                    url: "api/profile?action=checkpassword",
+                    method: "POST",
+                    contentType:"text",
+                    data: oldPassword,
+                    success: function(e){
+                        $('#alertWrongPassword').css('display','none');
+                        document.querySelector('#btnUpdate').disabled=false;
+                    },
+                    error: function(e){
+                        $('#alertWrongPassword').css('display','block');
+                        document.querySelector('#btnUpdate').disabled=true;
+                    }
+                    
+                });
             });
             $('#newPassword').change(function(e){
                 var newPassword = $('#newPassword').val();
@@ -91,7 +106,16 @@
                 user.username = "${user.getUsername()}";
                 user.password = $('#newPassword').val();
                 
-                console.log(user);
+                $.ajax({
+                    url: "api/profile?action=changepassword",
+                    method: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(user),
+                    success: function(){
+                        window.location.href="/profile?action=view";
+                    }
+                });
+                
             })
         </script>
         

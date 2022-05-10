@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.thrift.TException;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -38,7 +39,7 @@ public class ProfileAPI extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-      //  int id = Integer.valueOf(request.getParameter("id"));
+        //  int id = Integer.valueOf(request.getParameter("id"));
 
         User user = (User) SessionUtil.getInstance().getValue(request, "user");
 
@@ -50,7 +51,7 @@ public class ProfileAPI extends HttpServlet {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String json = objectMapper.writeValueAsString(user);
-        
+
         response.setStatus(HttpServletResponse.SC_OK);
 
         out.write(json);
@@ -59,31 +60,51 @@ public class ProfileAPI extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       
-        User user = httpUtil.getModel(request.getReader(), User.class);
-        boolean success = false;
 
-        success = userService.register(user);
-        if (success) {
-            try {
-                response.setStatus(HttpServletResponse.SC_OK);
-                
-                String USessionID = UUID.randomUUID().toString(); //Generates random UUID
-                
-                Base64.Encoder encoder = Base64.getEncoder();
-                String encodedUSessionID = encoder.encodeToString(USessionID.getBytes());
+        String action = request.getParameter("action");
+        
+        //handle registration
+        if (action == null) {
+            User user = httpUtil.getModel(request.getReader(), User.class);
+            boolean success = false;
 
-                user.setName(user.getName());
+            success = userService.register(user);
+            if (success) {
+                try {
+                    response.setStatus(HttpServletResponse.SC_OK);
 
-                SessionUtil.getInstance().putUserToDB(USessionID, user);
+                    String USessionID = UUID.randomUUID().toString(); //Generates random UUID
 
-                CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
-            } catch (SQLException ex) {
-                Logger.getLogger(ProfileAPI.class.getName()).log(Level.SEVERE, null, ex);
+                    Base64.Encoder encoder = Base64.getEncoder();
+                    String encodedUSessionID = encoder.encodeToString(USessionID.getBytes());
+
+                    user.setName(user.getName());
+
+                    SessionUtil.getInstance().putUserToDB(USessionID, user);
+
+                    CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
+                } catch (SQLException ex) {
+                    Logger.getLogger(ProfileAPI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }
-        } else {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        } 
+        //hanle checking password
+        else if (action.equals("checkpassword")) {
+            BufferedReader br = request.getReader();
+
+            String line = br.readLine();
+
+            User user = (User) SessionUtil.getInstance().getValue(request, "user");
+
+            if (BCrypt.checkpw(line, user.getPassword())) {
+                response.sendError(HttpServletResponse.SC_OK);
+            } else {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }
         }
+
     }
 
     @Override
@@ -92,21 +113,27 @@ public class ProfileAPI extends HttpServlet {
 
         try {
             User user = httpUtil.getModel(request.getReader(), User.class);
+
+            String action = request.getParameter("action");
+            
+            if (action != null)
+                if (action.equals("changepassword"))
+                    user.password=BCrypt.hashpw(user.password, BCrypt.gensalt(12));
             
             boolean success = userService.updateUser(user);
-            
-            if (success){
+
+            if (success) {
                 SessionUtil.getInstance().putValue(request, "user", user);
-                
+
                 String USessionID = UUID.randomUUID().toString(); //Generates random UUID
-                
+
                 Base64.Encoder encoder = Base64.getEncoder();
                 String encodedUSessionID = encoder.encodeToString(USessionID.getBytes());
 
                 SessionUtil.getInstance().putUserToDB(USessionID, user);
 
                 CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
-            } else{
+            } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }
         } catch (TException ex) {
