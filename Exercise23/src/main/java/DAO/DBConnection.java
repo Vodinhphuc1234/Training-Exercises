@@ -26,10 +26,12 @@ public class DBConnection {
             Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/test", "root", "Dinhphuc2009.");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3006/test", "root", "Dinhphuc2009.");
         } catch (SQLException ex) {
             Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        // -1 fail connect
     }
     
     public ResultSet query(String sql, Object ... params) throws SQLException{

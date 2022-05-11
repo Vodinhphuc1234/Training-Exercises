@@ -97,6 +97,8 @@ public class LoginController extends HttpServlet {
             HttpUtils<User> httpUtil = new HttpUtils<>();
             User user = httpUtil.getModel(request.getReader(), User.class);
 
+            
+            // loginbusiness.do() -> error, response
             UserService userService = new UserService();
 
             User loggedUser = null;
@@ -111,8 +113,10 @@ public class LoginController extends HttpServlet {
                 String encodedUSessionID = encoder.encodeToString(USessionID.getBytes());
 
                 user.setName(loggedUser.getName());
+                
+                SessionUtil.getInstance().putValue(request, "user", user);
 
-                SessionUtil.getInstance().putUserToDB(USessionID, user);
+                SessionUtil.getInstance().putUserToDB(USessionID, loggedUser);
 
                 CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
             } else {

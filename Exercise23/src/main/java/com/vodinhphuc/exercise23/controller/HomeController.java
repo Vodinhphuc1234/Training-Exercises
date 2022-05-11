@@ -17,10 +17,10 @@ import javax.servlet.http.HttpServletResponse;
 public class HomeController extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
         RequestDispatcher rd = request.getRequestDispatcher("/views/home.jsp");
         
         rd.forward(request, response);
     }
-
 }

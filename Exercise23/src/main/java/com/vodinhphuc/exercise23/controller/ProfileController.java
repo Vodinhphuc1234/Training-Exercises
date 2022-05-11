@@ -28,6 +28,8 @@ public class ProfileController extends HttpServlet {
         
         RequestDispatcher rd;
         
+        if (action != null)
+        {
         if (action.equals("update"))
            rd = req.getRequestDispatcher("/views/ProfileUpdating.jsp");
         else if (action.equals("view"))
@@ -36,6 +38,7 @@ public class ProfileController extends HttpServlet {
             rd = req.getRequestDispatcher("/views/ProfileChangingPassword.jsp");
         else
             rd = req.getRequestDispatcher("/views/Profile.jsp");
+        } else rd = req.getRequestDispatcher("/views/Profile.jsp");
         rd.forward(req, resp);
     }
     

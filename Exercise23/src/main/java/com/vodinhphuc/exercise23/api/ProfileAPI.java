@@ -4,6 +4,7 @@
  */
 package com.vodinhphuc.exercise23.api;
 
+import Messenger.Message;
 import Service.UserService;
 import ThriftConnection.User;
 import Utils.CookieUtil;
@@ -63,16 +64,24 @@ public class ProfileAPI extends HttpServlet {
 
         String action = request.getParameter("action");
         
+        PrintWriter out = response.getWriter();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        
+        String jsonString;
+        
+        response.setContentType("application/json");
+        
+        Message message;
         //handle registration
         if (action == null) {
             User user = httpUtil.getModel(request.getReader(), User.class);
             boolean success = false;
 
-            success = userService.register(user);
+            success = userService.register(user) /*.error == 0;
             if (success) {
                 try {
-                    response.setStatus(HttpServletResponse.SC_OK);
-
+                    
                     String USessionID = UUID.randomUUID().toString(); //Generates random UUID
 
                     Base64.Encoder encoder = Base64.getEncoder();
@@ -83,10 +92,19 @@ public class ProfileAPI extends HttpServlet {
                     SessionUtil.getInstance().putUserToDB(USessionID, user);
 
                     CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
+                    
+                    message = new Message(0, "Registration is completed!", "");
+                    
+                    response.setStatus(HttpServletResponse.SC_OK);
+
                 } catch (SQLException ex) {
                     Logger.getLogger(ProfileAPI.class.getName()).log(Level.SEVERE, null, ex);
+                    
+                    message = new Message(1, ex.toString(), "");
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 }
             } else {
+                message = new Message(1, "Authentication information is wrong", "");
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }
         } 
@@ -100,10 +118,16 @@ public class ProfileAPI extends HttpServlet {
 
             if (BCrypt.checkpw(line, user.getPassword())) {
                 response.sendError(HttpServletResponse.SC_OK);
+                message = new Message(0, "Checking password was passed.", "");
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                message = new Message(1, "Checking password was failed", "");
             }
         }
+        
+//        jsonString=objectMapper.writeValueAsString(message);
+//                    
+//        out.write(jsonString);
 
     }
 
@@ -111,11 +135,15 @@ public class ProfileAPI extends HttpServlet {
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        
         try {
             User user = httpUtil.getModel(request.getReader(), User.class);
 
             String action = request.getParameter("action");
             
+            String password = user.password;
+            
+            //handle change password
             if (action != null)
                 if (action.equals("changepassword"))
                     user.password=BCrypt.hashpw(user.password, BCrypt.gensalt(12));
@@ -130,8 +158,11 @@ public class ProfileAPI extends HttpServlet {
                 Base64.Encoder encoder = Base64.getEncoder();
                 String encodedUSessionID = encoder.encodeToString(USessionID.getBytes());
 
+                user.password = password;
                 SessionUtil.getInstance().putUserToDB(USessionID, user);
 
+                CookieUtil.getInstance().removeCookie(response, "u_session");
+                
                 CookieUtil.getInstance().setCookie(response, "u_session", encodedUSessionID);
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST);

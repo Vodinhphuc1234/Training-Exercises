@@ -102,7 +102,7 @@
                 var user = {}
                 
                 user.id = ${user.getId()}
-                user.name = "${use.getName()}";
+                user.name = "${user.getName()}";
                 user.username = "${user.getUsername()}";
                 user.password = $('#newPassword').val();
                 

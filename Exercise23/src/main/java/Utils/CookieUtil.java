@@ -38,6 +38,8 @@ public class CookieUtil {
     public void setCookie (HttpServletResponse response, String key, String value){
         Cookie cookie = new Cookie(key, value);
         
+        cookie.setPath("/");
+        
         cookie.setMaxAge(24*60*60);
         
         response.addCookie(cookie);
@@ -45,7 +47,11 @@ public class CookieUtil {
     
     public void removeCookie (HttpServletResponse response, String key){
         Cookie cookie = new Cookie(key, "");
+        
+        cookie.setPath("/");
+        
         cookie.setMaxAge(0);
+        
         response.addCookie(cookie);
     }
 }

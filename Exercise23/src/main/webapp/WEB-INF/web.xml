@@ -4,4 +4,23 @@
     <session-config>
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
+    
+    <servlet>  
+        <servlet-name>profile</servlet-name>  
+        <servlet-class>ProfileController</servlet-class>  
+    </servlet>  
+    
+    <servlet-mapping>  
+        <servlet-name>profile</servlet-name>  
+        <url-pattern>/profile</url-pattern>  
+    </servlet-mapping>  
+    
+    <filter>  
+        <filter-name>permissionFilter</filter-name>  
+        <filter-class>AuthorizationFilter</filter-class>  
+    </filter>
+    <filter-mapping>  
+        <filter-name>permissionFilter</filter-name>  
+        <url-pattern>/profile</url-pattern>  
+    </filter-mapping>
 </wep-app>
